@@ -31,10 +31,11 @@ def buscar_resultados_megasena():
 def gerar_combinacoes(request):
     combinacoes_resultado = []
     combinacoes_sorteadas = []
+    
     quantidade = None
-    dezenas = None
+    dezenas = ''
     data=None
-    concurso=None
+    concurso=''
     resultados_megasena = buscar_resultados_megasena()
     
     if request.method == 'POST':
@@ -42,7 +43,7 @@ def gerar_combinacoes(request):
         dezenas = request.POST.get('dezenas').zfill(2)
         print(dezenas)
     if dezenas:
-        combinacoes_resultado = gerar(quantidade, dezenas)
+        combinacoes_resultado = gerar(6, dezenas)
         
         # Dicionário para armazenar as datas dos sorteios para cada combinação
         combinacoes_datas = {}
@@ -63,31 +64,31 @@ def gerar_combinacoes(request):
                 concurso = r["concurso"]
                 dezenas_ordenadas = sorted(dezenas_sorteadas)
                 
-                #print('DEZENAS DO CONSURSO:',r["dezenas"])
                 # Verifica se todos os elementos da combinação estão nas dezenas sorteadas
-                if teste == teste.intersection(dezenas_sorteadas):
-                    
+                #if teste == teste.intersection(dezenas_sorteadas):
+                intersecao = teste.intersection(dezenas_sorteadas)
+                if len(intersecao) >= quantidade:    
                     print(f'Combinação encontrada! Dezenas sorteadas: {dezenas_ordenadas} na data: {data}, sorteio: {concurso}')
+                    print(f'Números em comum: {sorted(intersecao)}')
                     
-                    # Armazena a data do sorteio para a combinação
- 
-                      
-
         combinacoes_sorteadas = [
-                combinacao
-                for combinacao in combinacoes_resultado
-                if set(map(str, combinacao)) in [set(r["dezenas"]) for r in resultados_megasena]
-            ]
-        
+            combinacao
+            for combinacao in combinacoes_resultado
+            if any(
+                len(set(map(str, combinacao)).intersection(set(r["dezenas"]))) >= quantidade
+                for r in resultados_megasena
+                
+            )
+        ]
+
     context = {
         'quantidade': quantidade,
         'dezenas': dezenas,
         'combinacoes_resultado': combinacoes_resultado,
         'combinacoes_sorteadas': combinacoes_sorteadas,
-        'intervalo_quantidades': range(6, 11),
+        'intervalo_quantidades': range(1, 11),
         'data': data,
         'concurso': concurso,
-  
     }
     
     return render(request, 'megasena/combinacoes.html', context)
